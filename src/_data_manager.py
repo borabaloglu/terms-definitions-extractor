@@ -144,6 +144,19 @@ class Dataset(object):
 		self.instances=[]
 		self.labels=[]
 
+	def load_deft_corpus(self):
+		if self.name == "deft_corpus":
+			f = open(self.path)
+			lines = f.readlines()
+			for idx, line in enumerate(lines):
+				split_lines = line.split("\t")
+				label = split_lines[-1]
+				sentence = " ".join(split_lines[0:-1])
+				self.instances.append(sentence)
+				self.labels.append(int(label))
+			self.labels = np.array(self.labels)
+			print('Loaded ', self.name, ' data')
+
 	def load_wcl(self):
 
 		if self.name=='wcl':

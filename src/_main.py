@@ -67,14 +67,18 @@ if __name__ == '__main__':
 	# load datasets
 	# wcl is dataset of wikipedia defs (Navigli and Velardi, 2010 ACL)
 
-	if args['data_folder']=='data/wcl_datasets_v1.2/':
+	if args['data_folder']=='data/datasets/wcl_datasets_v1.2/':
 		name='wcl'
 		dataset=_data_manager.Dataset(args['data_folder'],name)
 		dataset.load_wcl()
-	elif args['data_folder']=='data/W00_dataset/':
+	elif args['data_folder']=='data/datasets/W00_dataset/':
 		name='w00'
 		dataset=_data_manager.Dataset(args['data_folder'],name)
 		dataset.load_w00()
+	elif args['data_folder']=='data/datasets/deftcorpus/deft_corpus.txt':
+		name='deft_corpus'
+		dataset=_data_manager.Dataset(args['data_folder'],name)
+		dataset.load_deft_corpus()
 
 
 	# load labels as np arrays
