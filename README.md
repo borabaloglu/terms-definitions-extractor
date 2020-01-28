@@ -11,6 +11,7 @@ Run the command below to install requirements:
 
 ```bash
 sudo python3.6 -m pip install -r requirements.txt
+sudo python3.6 -m spacy download en_core_web_sm
 ```
 
 # Train Model
