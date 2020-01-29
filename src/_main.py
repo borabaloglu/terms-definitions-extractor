@@ -205,7 +205,7 @@ if __name__ == '__main__':
 
 	scores=defaultdict(int)
 	for train, test in kfold.split(X_enriched, y):
-		nnmodel=_data_manager.build_model(X_enriched[train],y[train])
+		nnmodel=_data_manager.build_model(X_enriched[train],y[train], "cblstm")
 		#nnmodel.fit(X_wcl_enriched[train],y_wcl[train],epochs=epochs,batch_size=100)
 		print('Predicting...')
 		preds=np.array([i[0] for i in nnmodel.predict_classes(X_enriched[test])])
