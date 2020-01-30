@@ -115,7 +115,7 @@ def vectorize_deprels(label_list,maxlen_dep,embedding_dim,labeldict):
 		else:
 			out.append(onehot)
 	out=np.array(out)
-	#print('Out shape for labels: ',out.shape)			
+	#print('Out shape for labels: ',out.shape)
 	return out
 
 def load_embeddings(embeddings_path):
@@ -145,6 +145,26 @@ class Dataset(object):
 		self.labels=[]
 
 	def load_deft_corpus(self):
+		if self.name=='deft_corpus':
+			# only wikipedia (manually annotated) defs
+			for root, subdirs, files in os.walk(self.path):
+				for filename in files:
+					if filename.startswith('task_1'):
+						print('f: ',filename)
+						doc=os.path.join(root,filename)
+						lines = open(doc, 'r').readlines()
+						for idx,line in enumerate(lines):
+							split_line = line.split("\t")
+							sentence = split_line[0].replace("\"", "")
+							label = split_line[1].replace("\"", "")
+							self.instances.append(sentence)
+							self.labels.append(label)
+			self.labels=np.array(self.labels)
+			print('Loaded ',self.name,' data')
+		else:
+			sys.exit('Dataset name must be "deft_corpus" ')
+
+
 		if self.name == "deft_corpus":
 			f = open(self.path)
 			lines = f.readlines()
@@ -198,4 +218,4 @@ class Dataset(object):
 			self.labels=np.array(self.labels)
 			print('Loaded ',self.name,' data')
 		else:
-			sys.exit('Dataset name must be "w00" ')	
+			sys.exit('Dataset name must be "w00" ')
