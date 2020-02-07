@@ -1,5 +1,7 @@
+import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Bidirectional, Dropout, Conv1D, MaxPooling1D, Embedding, Add, Flatten, LSTM
+from keras.activations import tanh
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score
 

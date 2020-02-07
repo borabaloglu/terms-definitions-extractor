@@ -1,16 +1,18 @@
 class Parameters:
 	def __init__(self):
 		# Constant params
-		self.embeddings_path = "./data/embeddings/GoogleNews-vectors-negative300.bin"
-		self.dataset_path = "./data/dataset/deftcorpus"
+		self.embeddings_path = "src/data/embeddings/GoogleNews-vectors-negative300.bin"
+		self.dataset_path = "src/data/dataset/deftcorpus"
 
 		# Spacy params
 		self.spacy_models = ["en_core_web_sm", "en_core_web_md", "en_core_web_lg"]
 
 		# Model params
 		self.model_types = ["cnn", "cblstm"]
-		self.epochs = 100
-		self.batch_size = 8
+		self.epochs = 20
+		self.batch_size = 128
+		self.train_split_size = 0.2
+		self.val_split_size = 0.2
 
 		# CNN params
 		self.kernel_sizes = [3, 6, 9]

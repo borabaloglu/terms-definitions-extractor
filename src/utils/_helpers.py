@@ -4,9 +4,6 @@ import numpy as np
 from sklearn.utils import shuffle
 
 
-EMBEDDINGS_PATH = "./data/embeddings/GoogleNews-vectors-negative300.bin"
-
-
 def load_embeddings(path):
 	try:
 		model = gensim.models.Word2Vec.load(path)
@@ -31,7 +28,7 @@ def get_maxlen(dataset, nlp):
 	dep_id = 0
 
 	for idx, sent in enumerate(dataset.instances):
-		if idx % 500 == 0:
+		if idx % 1000 == 0:
 			print("Done " + str(idx) + " of " + str(len(dataset.instances)))
 		try:
 			sent_maxlen_dep = 0
@@ -68,9 +65,10 @@ def pad_words(tokens, maxlen, append_tuple=False):
 		return tokens
 
 
-def vectorize_dataset(dataset, nlp):
+def vectorize_dataset(dataset, nlp, embeddings_path):
 	print("Loading embeddings")
-	embeddings_model, embeddings_vocab, embeddings_dim = load_embeddings(EMBEDDINGS_PATH)
+	embeddings_model, embeddings_vocab, embeddings_dim = load_embeddings(
+		embeddings_path)
 
 	print("Getting maxlen")
 	maxlen, deps2ids = get_maxlen(dataset, nlp)
@@ -79,7 +77,7 @@ def vectorize_dataset(dataset, nlp):
 	print("Vectorizing dataset")
 	x = []
 	for idx, sent in enumerate(dataset.instances):
-		if idx % 500 == 0:
+		if idx % 1000 == 0:
 			print("Done " + str(idx) + " of " + str(len(dataset.instances)))
 		tokens = [tok.orth_ for tok in nlp(sent.lower())]
 		sent_matrix = []
