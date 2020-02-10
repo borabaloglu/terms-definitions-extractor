@@ -1,9 +1,13 @@
 import tensorflow as tf
+from keras import Model as M
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Bidirectional, Dropout, Conv1D, MaxPooling1D, Embedding, Add, Flatten, LSTM
+from keras.layers import Dense, Activation, Bidirectional, Dropout, Conv1D, MaxPool1D, Embedding, Add, Flatten, LSTM, \
+	Input
 from keras.activations import tanh
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score
+from src.utils._attention import attention_3d_block
+
 
 class Model(object):
 	def __init__(self, x, y, opts):
@@ -15,6 +19,7 @@ class Model(object):
 		self.loss_func = "binary_crossentropy"
 		self.optimizer = "adam"
 		self.metrics = ["accuracy"]
+		self.activate_attention = opts["activate_attention"]
 		self.cnn_opts = {
 			"kernel_size": opts["kernel_size"],
 			"filters": opts["filters"],
@@ -28,38 +33,35 @@ class Model(object):
 		}
 
 	def build_model(self):
-		model = Sequential()
-		model.add(Conv1D(
-			filters=self.cnn_opts["filters"],
-			kernel_size=self.cnn_opts["kernel_size"],
-			strides=self.cnn_opts["strides"],
-			padding=self.cnn_opts["padding"],
-			activation=self.cnn_opts["activation"],
-			input_shape=(self.x.shape[1], self.x.shape[2])
-		))
-		model.add(MaxPooling1D(pool_size=self.cnn_opts["pool_size"]))
+		inputs = Input(shape=(self.x.shape[1], self.x.shape[2]))
 		if self.model_type == "cnn":
-			model.add(Flatten())
-			model.add(Dropout(0.5))
-		elif self.model_type == "cblstm":
-			model.add(Bidirectional(LSTM(units=self.lstm_opts["units"])))
-			model.add(Dropout(0.5))
+			cnn_out = Conv1D(
+				filters=self.cnn_opts["filters"],
+				kernel_size=self.cnn_opts["kernel_size"],
+				strides=self.cnn_opts["strides"],
+				padding=self.cnn_opts["padding"],
+				activation=self.cnn_opts["activation"],
+			)(inputs)
+			max_pool_out = MaxPool1D(pool_size=self.cnn_opts["pool_size"])(cnn_out)
+			dropout_out = Dropout(0.2)(max_pool_out)
 		else:
-			pass
-		model.add(Dense(1))
-		model.add(Activation(self.activation_func))
-		model.compile(
-			loss=self.loss_func,
-			optimizer=self.optimizer,
-			metrics=self.metrics
-		)
-		self.model = model
+			lstm_out = Bidirectional(LSTM(units=self.lstm_opts["units"], return_sequences=True))(inputs)
+			dropout_out = Dropout(0.2)(lstm_out)
+		if self.activate_attention:
+			attention_out = attention_3d_block(dropout_out)
+		else:
+			attention_out = Flatten()(dropout_out)
+		output = Dense(1, activation=self.activation_func)(attention_out)
+		self.model = M(inputs=[inputs], outputs=[output])
+		self.model.compile(loss=self.loss_func,
+						   optimizer=self.optimizer,
+						   metrics=self.metrics)
 
 	def fit_model(self, epochs, batch_size, validation_data):
-		self.model.fit(self.x, self.y, epochs=epochs, batch_size=batch_size, validation_data=validation_data, verbose=False)
+		self.model.fit(self.x, self.y, epochs=epochs, batch_size=batch_size, validation_data=validation_data, verbose=True)
 
 	def calculate_metrics(self, x_test, y_test):
-		preds = np.array([i[0] for i in self.model.predict_classes(x_test)])
+		preds = np.array([i[0].round() for i in self.model.predict(x_test)])
 		precision = precision_score(y_test, preds)
 		recall = recall_score(y_test, preds)
 		f1 = f1_score(y_test, preds)
