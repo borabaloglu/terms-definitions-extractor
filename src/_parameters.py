@@ -7,10 +7,10 @@ class Parameters:
 		self.test_dataset_path = "./data/dataset/test"
 
 		# Spacy params
-		self.spacy_models = ["en_core_web_sm", "en_core_web_md", "en_core_web_lg"]
+		self.spacy_model = "en_core_web_sm"
 
 		# Model params
-		self.model_types = ["blstm"]
+		self.model_type = "cnn"
 		self.epochs = 10
 		self.batch_size = 64
 		self.train_split_size = 0.2

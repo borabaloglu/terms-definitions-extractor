@@ -1,9 +1,5 @@
-import tensorflow as tf
-from keras import Model as M
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Bidirectional, Dropout, Conv1D, MaxPool1D, Embedding, Add, Flatten, LSTM, \
-	Input
-from keras.activations import tanh
+from keras import Model as KerasModel
+from keras.layers import Dense, Bidirectional, Dropout, Conv1D, MaxPool1D, Flatten, LSTM, Input
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, f1_score
 from src.utils._attention import attention_3d_block
@@ -20,17 +16,19 @@ class Model(object):
 		self.optimizer = "adam"
 		self.metrics = ["accuracy"]
 		self.activate_attention = opts["activate_attention"]
-		self.cnn_opts = {
-			"kernel_size": opts["kernel_size"],
-			"filters": opts["filters"],
-			"pool_size": opts["pool_size"],
-			"strides": opts["strides"],
-			"padding": "valid",
-			"activation": "relu",
-		}
-		self.lstm_opts = {
-			"units": opts["lstm_units"]
-		}
+		if self.model_type == "cnn":
+			self.cnn_opts = {
+				"kernel_size": opts["kernel_size"],
+				"filters": opts["filters"],
+				"pool_size": opts["pool_size"],
+				"strides": opts["strides"],
+				"padding": "valid",
+				"activation": "relu",
+			}
+		else:
+			self.lstm_opts = {
+				"units": opts["lstm_units"]
+			}
 
 	def build_model(self):
 		inputs = Input(shape=(self.x.shape[1], self.x.shape[2]))
@@ -52,7 +50,7 @@ class Model(object):
 		else:
 			attention_out = Flatten()(dropout_out)
 		output = Dense(1, activation=self.activation_func)(attention_out)
-		self.model = M(inputs=[inputs], outputs=[output])
+		self.model = KerasModel(inputs=[inputs], outputs=[output])
 		self.model.compile(loss=self.loss_func,
 						   optimizer=self.optimizer,
 						   metrics=self.metrics)

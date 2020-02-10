@@ -1,0 +1,1 @@
+{'model_type': 'cnn', 'kernel_size': 3, 'filters': 192, 'pool_size': 4, 'strides': 2, 'lstm_units': 0, 'activate_attention': False, 'results': {'precision': 0.7424892703862661, 'recall': 0.6360294117647058, 'f1': 0.6851485148514852}, 'history': <keras.callbacks.callbacks.History object at 0x7ff56a631da0>}
