@@ -36,8 +36,6 @@ if __name__ == "__main__":
 	datasets = [train_dataset, val_dataset, test_dataset]
 	x_train, y_train, x_val, y_val, x_test, y_test = helpers.vectorize_dataset(datasets, nlp, embeddings)
 
-	max_f1 = parameters.f1_threshold
-
 	if parameters.model_type == "cnn":
 		for kernel_size in parameters.kernel_sizes:
 			for filter_size in parameters.filters:
@@ -59,17 +57,22 @@ if __name__ == "__main__":
 							model.fit_model(epochs=parameters.epochs, batch_size=parameters.batch_size, validation_data=(x_val, y_val))
 							precision, recall, f1 = model.calculate_metrics(x_test, y_test)
 							print(precision, recall, f1)
-							if f1 > max_f1:
-								model.model.save("./data/models/model_" + str(f1) + ".h5")
-								f = open("./data/models/model_" + str(f1) + ".json", "w")
-								opts["results"] = {
-									"precision": precision,
-									"recall": recall,
-									"f1": f1
-								}
-								f.write(str(opts))
-								f.close()
-								max_f1 = f1
+							model.model.save("./data/models/model_" + str(f1) + ".h5")
+							f = open("./data/models/model_" + str(f1) + ".json", "w")
+							opts["results"] = {
+								"precision": precision,
+								"recall": recall,
+								"f1": f1
+							}
+							history = model.model.history.history
+							opts["history"] = {
+								"val_loss": history["val_loss"],
+								"val_accuracy": history["val_accuracy"],
+								"loss": history["loss"],
+								"accuracy": history["accuracy"]
+							}
+							f.write(str(opts))
+							f.close()
 	else:
 		for lstm_unit in parameters.lstm_units:
 			for attention in parameters.activate_attention:
@@ -85,14 +88,19 @@ if __name__ == "__main__":
 				model.fit_model(epochs=parameters.epochs, batch_size=parameters.batch_size, validation_data=(x_val, y_val))
 				precision, recall, f1 = model.calculate_metrics(x_test, y_test)
 				print(precision, recall, f1)
-				if f1 > max_f1:
-					model.model.save("./data/models/model_" + str(f1) + ".h5")
-					f = open("./data/models/model_" + str(f1) + ".json", "w")
-					opts["results"] = {
-						"precision": precision,
-						"recall": recall,
-						"f1": f1
-					}
-					f.write(str(opts))
-					f.close()
-					max_f1 = f1
+				model.model.save("./data/models/model_" + str(f1) + ".h5")
+				f = open("./data/models/model_" + str(f1) + ".json", "w")
+				opts["results"] = {
+					"precision": precision,
+					"recall": recall,
+					"f1": f1
+				}
+				history = model.model.history.history
+				opts["history"] = {
+					"val_loss": history["val_loss"],
+					"val_accuracy": history["val_accuracy"],
+					"loss": history["loss"],
+					"accuracy": history["accuracy"]
+				}
+				f.write(str(opts))
+				f.close()

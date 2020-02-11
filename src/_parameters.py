@@ -18,10 +18,10 @@ class Parameters:
 		self.activate_attention = [True, False]
 
 		# CNN params
-		self.kernel_sizes = [3, 6, 9]
+		self.kernel_sizes = [3, 4, 5]
 		self.filters = [96, 192, 256]
 		self.pool_sizes = [2, 4]
-		self.strides = [1, 2]
+		self.strides = [1]
 
 		# LSTM params
 		self.lstm_units = [96, 192, 256]
