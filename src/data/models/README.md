@@ -1,3 +1,3 @@
 # Models
 
-Models will be saved under this folders.
+Models will be saved under this folder.
