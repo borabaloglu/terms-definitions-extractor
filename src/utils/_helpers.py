@@ -91,3 +91,18 @@ def vectorise_dataset(dataset, nlp, embeddings, maxlen, idlen):
     y = np.array(dataset.labels)
     x, y = shuffle(x, y, random_state=42)
     return x, y
+
+
+def vectorise_sent(sent, nlp, embeddings_vocab, embeddings_model, embeddings_dim):
+    tokens = [tok.orth_ for tok in nlp(sent.lower())]
+    sent_matrix = []
+    for token in pad_words(tokens, 134, append_tuple=False):
+        if token in embeddings_vocab:
+            vec = np.concatenate(
+                [embeddings_model[token], np.zeros(46 + 1)])
+            sent_matrix.append(vec)
+        else:
+            sent_matrix.append(
+                np.zeros(embeddings_dim + 46 + 1))
+    sent_matrix = np.array(sent_matrix)
+    return np.array([sent_matrix])

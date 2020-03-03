@@ -32,3 +32,13 @@ class Parameters:
 
 		# LSTM params
 		self.lstm_units = 300
+
+
+class EvalParameters:
+	def __init__(self):
+		self.model_name = ""
+		self.eval_unlabelled_path = "./data/eval/unlabelled"
+		self.eval_labelled_path = "./data/eval/labelled"
+		self.model_opts_path = "./data/eval/models/opts"
+		self.model_h5_path = "./data/eval/models/h5"
+		self.prediction_threshold = 0.6
