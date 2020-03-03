@@ -1,7 +1,9 @@
+# region Import libraries
 import gensim
 import sys
 import numpy as np
 from sklearn.utils import shuffle
+# endregion
 
 
 def load_embeddings(path):
@@ -15,7 +17,7 @@ def load_embeddings(path):
                 model = gensim.models.KeyedVectors.load_word2vec_format(
                     path, binary=True)
             except:
-                sys.exit("Couldn't load embeddings")
+                sys.exit("Loading embeddings failed!")
     vocab = model.index2word
     dim = model.__getitem__(vocab[0]).shape[0]
     vocab = set(vocab)
@@ -66,48 +68,26 @@ def pad_words(tokens, maxlen, append_tuple=False):
         return tokens
 
 
-def vectorize_dataset(datasets, nlp, embeddings):
+def vectorise_dataset(dataset, nlp, embeddings, maxlen, idlen):
     embeddings_model = embeddings["model"]
     embeddings_vocab = embeddings["vocab"]
     embeddings_dim = embeddings["dim"]
 
-    print("Getting maxlen")
-    maxlen, deps2ids = get_maxlen(datasets[0], nlp)
-    ids2deps = dict([(idx, dep) for dep, idx in deps2ids.items()])
-
-    print("Vectorizing dataset")
-    x_train = []
-    x_val = []
-    x_test = []
-    for i in range(len(datasets)):
-        dataset = datasets[i]
-        for idx, sent in enumerate(dataset.instances):
-            if idx % 1000 == 0:
-                print("Done " + str(idx) + " of " + str(len(dataset.instances)))
-            tokens = [tok.orth_ for tok in nlp(sent.lower())]
-            sent_matrix = []
-            for token in pad_words(tokens, maxlen, append_tuple=False):
-                if token in embeddings_vocab:
-                    vec = np.concatenate(
-                        [embeddings_model[token], np.zeros(len(ids2deps) + 1)])
-                    sent_matrix.append(vec)
-                else:
-                    sent_matrix.append(
-                        np.zeros(embeddings_dim + len(ids2deps) + 1))
-            sent_matrix = np.array(sent_matrix)
-            if i == 0:
-                x_train.append(sent_matrix)
-            elif i == 1:
-                x_val.append(sent_matrix)
+    x = []
+    for idx, sent in enumerate(dataset.instances):
+        if idx % 1000 == 0:
+            print("Done " + str(idx) + " of " + str(len(dataset.instances)))
+        tokens = [tok.orth_ for tok in nlp(sent.lower())]
+        sent_matrix = []
+        for token in pad_words(tokens, maxlen, append_tuple=False):
+            if token in embeddings_vocab:
+                vec = np.concatenate([embeddings_model[token], np.zeros(idlen + 1)])
+                sent_matrix.append(vec)
             else:
-                x_test.append(sent_matrix)
-    x_train = np.array(x_train)
-    y_train = np.array(datasets[0].labels)
-    x_val = np.array(x_val)
-    y_val = np.array(datasets[1].labels)
-    x_test = np.array(x_test)
-    y_test = np.array(datasets[2].labels)
-    x_train, y_train = shuffle(x_train, y_train, random_state=42)
-    x_val, y_val = shuffle(x_val, y_val, random_state=42)
-    x_test, y_test = shuffle(x_test, y_test, random_state=42)
-    return x_train, y_train, x_val, y_val, x_test, y_test
+                sent_matrix.append(np.zeros(embeddings_dim + idlen + 1))
+        sent_matrix = np.array(sent_matrix)
+        x.append(sent_matrix)
+    x = np.array(x)
+    y = np.array(dataset.labels)
+    x, y = shuffle(x, y, random_state=42)
+    return x, y

@@ -1,3 +1,13 @@
 .idea
+
+# includes embeddings
 src/data/embeddings/*
+!src/data/embeddings/README.md
+
+# includes models
+src/data/models/h5/*
+!src/data/models/h5/README.md
+src/data/models/opts/*
+!src/data/models/opts/README.md
+
 src/data/old

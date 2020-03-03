@@ -1,31 +1,38 @@
+# region Import libraries
 import spacy
 import src.utils._helpers as helpers
 from src.classes.Dataset import Dataset
 from src.classes.Model import Model
 from src._parameters import Parameters
+import numpy as np
+import json
 import pprint
+import uuid
 pp = pprint.PrettyPrinter(indent=4)
+# endregion
 
 if __name__ == "__main__":
 
+	np.random.seed(42)
+
 	parameters = Parameters()
 
-	print("Loading spacy")
+	print("Loading spacy...")
 	nlp = spacy.load(parameters.spacy_model)
 
-	print("Loading dataset")
+	print("Loading train dataset...")
 	train_dataset = Dataset(parameters.train_dataset_path)
 	train_dataset.load_dataset()
 
-	print("Loading validation dataset")
+	print("Loading validation dataset...")
 	val_dataset = Dataset(parameters.val_dataset_path)
 	val_dataset.load_dataset()
 
-	print("Loading test dataset")
+	print("Loading test dataset...")
 	test_dataset = Dataset(parameters.test_dataset_path)
 	test_dataset.load_dataset()
 
-	print("Loading embeddings")
+	print("Loading embeddings...")
 	embeddings_model, embeddings_vocab, embeddings_dim = helpers.load_embeddings(parameters.embeddings_path)
 	embeddings = {
 		"model": embeddings_model,
@@ -33,74 +40,63 @@ if __name__ == "__main__":
 		"dim": embeddings_dim
 	}
 
-	datasets = [train_dataset, val_dataset, test_dataset]
-	x_train, y_train, x_val, y_val, x_test, y_test = helpers.vectorize_dataset(datasets, nlp, embeddings)
+	print("Vectorising train dataset...")
+	x_train, y_train = helpers.vectorise_dataset(train_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
 
+	print("Vectorising validation dataset...")
+	x_val, y_val = helpers.vectorise_dataset(val_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
+
+	print("Vectorising test dataset...")
+	x_test, y_test = helpers.vectorise_dataset(test_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
+
+	opts = {
+		"model_type": parameters.model_type,
+		"activate_attention": parameters.activate_attention,
+		"dropout": parameters.dropout
+	}
 	if parameters.model_type == "cnn":
-		for kernel_size in parameters.kernel_sizes:
-			for filter_size in parameters.filters:
-				for pool_size in parameters.pool_sizes:
-					for stride in parameters.strides:
-						for attention in parameters.activate_attention:
-							opts = {
-								"model_type": parameters.model_type,
-								"kernel_size": kernel_size,
-								"filters": filter_size,
-								"pool_size": pool_size,
-								"strides": stride,
-								"activate_attention": attention
-							}
-							print("Train started with opts...")
-							pp.pprint(opts)
-							model = Model(x_train, y_train, opts)
-							model.build_model()
-							model.fit_model(epochs=parameters.epochs, batch_size=parameters.batch_size, validation_data=(x_val, y_val))
-							precision, recall, f1 = model.calculate_metrics(x_test, y_test)
-							print(precision, recall, f1)
-							model.model.save("./data/models/model_" + str(f1) + ".h5")
-							f = open("./data/models/model_" + str(f1) + ".json", "w")
-							opts["results"] = {
-								"precision": precision,
-								"recall": recall,
-								"f1": f1
-							}
-							history = model.model.history.history
-							opts["history"] = {
-								"val_loss": history["val_loss"],
-								"val_accuracy": history["val_accuracy"],
-								"loss": history["loss"],
-								"accuracy": history["accuracy"]
-							}
-							f.write(str(opts))
-							f.close()
+		opts = {
+			"kernel_size": parameters.kernel_size,
+			"filters": parameters.filters,
+			"pool_size": parameters.pool_size,
+			"strides": parameters.strides
+		}
+	elif parameters.model_type == "blstm":
+		opts = {
+			"lstm_units": parameters.lstm_units
+		}
 	else:
-		for lstm_unit in parameters.lstm_units:
-			for attention in parameters.activate_attention:
-				opts = {
-					"model_type": parameters.model_type,
-					"lstm_units": lstm_unit,
-					"activate_attention": attention
-				}
-				print("Train started with opts...")
-				pp.pprint(opts)
-				model = Model(x_train, y_train, opts)
-				model.build_model()
-				model.fit_model(epochs=parameters.epochs, batch_size=parameters.batch_size, validation_data=(x_val, y_val))
-				precision, recall, f1 = model.calculate_metrics(x_test, y_test)
-				print(precision, recall, f1)
-				model.model.save("./data/models/model_" + str(f1) + ".h5")
-				f = open("./data/models/model_" + str(f1) + ".json", "w")
-				opts["results"] = {
-					"precision": precision,
-					"recall": recall,
-					"f1": f1
-				}
-				history = model.model.history.history
-				opts["history"] = {
-					"val_loss": history["val_loss"],
-					"val_accuracy": history["val_accuracy"],
-					"loss": history["loss"],
-					"accuracy": history["accuracy"]
-				}
-				f.write(str(opts))
-				f.close()
+		pass
+
+	print("== OPTS ==")
+	pp.pprint(opts)
+
+	model = Model(x_train, y_train, opts)
+	model.build_model()
+	model.fit_model(epochs=parameters.epochs, batch_size=parameters.batch_size, validation_data=(x_val, y_val))
+
+	history = model.model.history.history
+	opts["history"] = {
+		"val_loss": history["val_loss"],
+		"val_accuracy": history["val_accuracy"],
+		"loss": history["loss"],
+		"accuracy": history["accuracy"]
+	}
+	pp.pprint(opts["history"])
+
+	precision, recall, f1 = model.calculate_metrics(x_test, y_test)
+	opts["metrics"] = {
+		"precision": precision,
+		"recall": recall,
+		"f1": f1
+	}
+	pp.pprint(opts["metrics"])
+
+	if parameters.save_model:
+		unique_id = str(uuid.uuid1())
+		file_name = str(f1) + "_" + unique_id
+		with open(parameters.save_model_opts_path + file_name + ".json", "w") as output:
+			json.dump(opts, output, sort_keys=True, indent=4)
+		model.model.save(parameters.save_model_h5_path + file_name + ".h5")
+		print("Your model opts is saved into " + parameters.save_model_opts_path + file_name + ".json")
+		print("Your model is saved into " + parameters.save_model_h5_path + file_name + ".h5")

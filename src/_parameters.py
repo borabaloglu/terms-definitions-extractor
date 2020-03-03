@@ -2,28 +2,32 @@ class Parameters:
 	def __init__(self):
 		# Constant params
 		self.embeddings_path = "./data/embeddings/GoogleNews-vectors-negative300.bin"
-		self.train_dataset_path = "./data/dataset/train"
-		self.val_dataset_path = "./data/dataset/val"
-		self.test_dataset_path = "./data/dataset/test"
+		self.train_dataset_path = "./data/dataset/all/train"
+		self.val_dataset_path = "./data/dataset/all/val"
+		self.test_dataset_path = "./data/dataset/all/test"
+		self.save_model_opts_path = "./data/models/opts"
+		self.save_model_h5_path = "./data/models/h5"
+
+		# Embedding params
+		self.maxlen = 134
+		self.idlen = 46
 
 		# Spacy params
-		self.spacy_model = "en_core_web_sm"
+		self.spacy_model = "en_core_web_lg"
 
 		# Model params
-		self.model_type = "cnn"
+		self.save_model = True
+		self.model_type = "blstm"
 		self.epochs = 10
-		self.batch_size = 64
-		self.train_split_size = 0.2
-		self.val_split_size = 0.2
-		self.activate_attention = [True, False]
+		self.batch_size = 128
+		self.activate_attention = True
+		self.dropout = 0.4
 
 		# CNN params
-		self.kernel_sizes = [3, 4, 5]
-		self.filters = [96, 192, 256]
-		self.pool_sizes = [2, 4]
-		self.strides = [1]
+		self.kernel_size = 3
+		self.filters = 96
+		self.pool_size = 2
+		self.strides = 1
 
 		# LSTM params
-		self.lstm_units = [96, 192, 256]
-
-		self.f1_threshold = 0.6
+		self.lstm_units = 300
