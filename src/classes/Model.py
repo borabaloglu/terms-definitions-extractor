@@ -26,7 +26,7 @@ class Model(object):
         try:
             if opts["load_weights"]:
                 self.load_weights = True
-                self.weights_path = opts.weights_path
+                self.weights_path = opts["weights_path"]
             else:
                 self.load_weights = False
         except KeyError:
