@@ -4,6 +4,7 @@ import src.utils._helpers as helpers
 from src.classes.Dataset import Dataset
 from src.classes.Model import Model
 from src._parameters import Parameters
+import os
 import numpy as np
 import json
 import pprint
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 	}
 
 	print("Vectorising train dataset...")
-	x_train, y_train = helpers.vectorise_dataset(train_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
+	x_train, y_train = helpers.vectorise_dataset(val_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
 
 	print("Vectorising validation dataset...")
 	x_val, y_val = helpers.vectorise_dataset(val_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
@@ -52,19 +53,16 @@ if __name__ == "__main__":
 	opts = {
 		"model_type": parameters.model_type,
 		"activate_attention": parameters.activate_attention,
-		"dropout": parameters.dropout
+		"dropout": parameters.dropout,
+		"input_dims": parameters.input_dims
 	}
 	if parameters.model_type == "cnn":
-		opts = {
-			"kernel_size": parameters.kernel_size,
-			"filters": parameters.filters,
-			"pool_size": parameters.pool_size,
-			"strides": parameters.strides
-		}
+		opts["kernel_size"] = parameters.kernel_size
+		opts["filters"] = parameters.filters
+		opts["pool_size"] = parameters.pool_size
+		opts["strides"] = parameters.strides
 	elif parameters.model_type == "blstm":
-		opts = {
-			"lstm_units": parameters.lstm_units
-		}
+		opts["lstm_units"] = parameters.lstm_units
 	else:
 		pass
 
@@ -77,26 +75,27 @@ if __name__ == "__main__":
 
 	history = model.model.history.history
 	opts["history"] = {
-		"val_loss": history["val_loss"],
-		"val_accuracy": history["val_accuracy"],
-		"loss": history["loss"],
-		"accuracy": history["accuracy"]
+		"val_loss": str(history["val_loss"]),
+		"val_accuracy": str(history["val_accuracy"]),
+		"loss": str(history["loss"]),
+		"accuracy": str(history["accuracy"])
 	}
 	pp.pprint(opts["history"])
 
 	precision, recall, f1 = model.calculate_metrics(x_test, y_test)
 	opts["metrics"] = {
-		"precision": precision,
-		"recall": recall,
-		"f1": f1
+		"precision": str(precision),
+		"recall": str(recall),
+		"f1": str(f1)
 	}
-	pp.pprint(opts["metrics"])
 
 	if parameters.save_model:
 		unique_id = str(uuid.uuid1())
 		file_name = str(f1) + "_" + unique_id
-		with open(parameters.save_model_opts_path + file_name + ".json", "w") as output:
+		opts_path = os.path.join(parameters.model_opts_path, file_name + ".json")
+		h5_path = os.path.join(parameters.model_h5_path, file_name + ".h5")
+		with open(opts_path, "w") as output:
 			json.dump(opts, output, sort_keys=True, indent=4)
-		model.model.save(parameters.save_model_h5_path + file_name + ".h5")
-		print("Your model opts is saved into " + parameters.save_model_opts_path + file_name + ".json")
-		print("Your model is saved into " + parameters.save_model_h5_path + file_name + ".h5")
+		model.model.save(h5_path)
+		print("Your model opts is saved into " + opts_path)
+		print("Your model is saved into " + h5_path)

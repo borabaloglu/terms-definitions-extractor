@@ -15,6 +15,7 @@ class Model(object):
         self.model = None
         self.x = x
         self.y = y
+        self.input_dims = opts["input_dims"]
         self.model_type = opts["model_type"]
         self.activation_func = "sigmoid"
         self.loss_func = "binary_crossentropy"
@@ -22,6 +23,14 @@ class Model(object):
         self.metrics = ["accuracy"]
         self.activate_attention = opts["activate_attention"]
         self.dropout = opts["dropout"]
+        try:
+            if opts["load_weights"]:
+                self.load_weights = True
+                self.weights_path = opts.weights_path
+            else:
+                self.load_weights = False
+        except KeyError:
+            self.load_weights = False
         if self.model_type == "cnn":
             self.cnn_opts = {
                 "kernel_size": opts["kernel_size"],
@@ -39,7 +48,7 @@ class Model(object):
             pass
 
     def build_model(self):
-        inputs = Input(shape=(self.x.shape[1], self.x.shape[2]))
+        inputs = Input(shape=(self.input_dims[0], self.input_dims[1]))
         if self.model_type == "cnn":
             cnn_out = Conv1D(
                 filters=self.cnn_opts["filters"],
@@ -59,6 +68,8 @@ class Model(object):
             attention_out = Flatten()(dropout_out)
         output = Dense(1, activation=self.activation_func)(attention_out)
         self.model = KerasModel(inputs=[inputs], outputs=[output])
+        if self.load_weights:
+            self.model.load_weights(self.weights_path)
         self.model.compile(loss=self.loss_func, optimizer=self.optimizer, metrics=self.metrics)
 
     def fit_model(self, epochs, batch_size, validation_data):

@@ -2,15 +2,16 @@ class Parameters:
 	def __init__(self):
 		# Constant params
 		self.embeddings_path = "./data/embeddings/GoogleNews-vectors-negative300.bin"
-		self.train_dataset_path = "./data/dataset/all/train"
-		self.val_dataset_path = "./data/dataset/all/val"
-		self.test_dataset_path = "./data/dataset/all/test"
-		self.save_model_opts_path = "./data/models/opts"
-		self.save_model_h5_path = "./data/models/h5"
+		self.train_dataset_path = "./data/dataset/all/train/"
+		self.val_dataset_path = "./data/dataset/all/val/"
+		self.test_dataset_path = "./data/dataset/all/test/"
+		self.model_opts_path = "./data/models/opts/"
+		self.model_h5_path = "./data/models/h5/"
 
 		# Embedding params
 		self.maxlen = 134
 		self.idlen = 46
+		self.input_dims = (134, 347)
 
 		# Spacy params
 		self.spacy_model = "en_core_web_lg"
@@ -18,7 +19,7 @@ class Parameters:
 		# Model params
 		self.save_model = True
 		self.model_type = "blstm"
-		self.epochs = 10
+		self.epochs = 1
 		self.batch_size = 128
 		self.activate_attention = True
 		self.dropout = 0.4
