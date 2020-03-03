@@ -42,7 +42,7 @@ if __name__ == "__main__":
 	}
 
 	print("Vectorising train dataset...")
-	x_train, y_train = helpers.vectorise_dataset(val_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
+	x_train, y_train = helpers.vectorise_dataset(train_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
 
 	print("Vectorising validation dataset...")
 	x_val, y_val = helpers.vectorise_dataset(val_dataset, nlp, embeddings, parameters.maxlen, parameters.idlen)
